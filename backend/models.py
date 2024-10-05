@@ -6,7 +6,7 @@ from database import Base
 class User(Base):
     __tablename__ = "users"
 
-    user_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, primary_key=True, index=True)
     age = Column(Integer, nullable=True)
     sex = Column(String, nullable=True)
     country = Column(String, nullable=True)
@@ -18,7 +18,7 @@ class CheckIn(Base):
     __tablename__ = "checkins"
 
     checkin_id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.user_id"))
+    user_id = Column(String, ForeignKey("users.user_id"))
     date = Column(Date, nullable=False)
 
     user = relationship("User", back_populates="check_ins")
