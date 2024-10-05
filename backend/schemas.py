@@ -1,109 +1,77 @@
 from pydantic import BaseModel
-from typing import List, Optional
-from datetime import date
 
-# User Schema
-class UserBase(BaseModel):
+
+class User(BaseModel):
+    user_id: str
     age: int
     sex: str
     country: str
 
 
-class UserCreate(UserBase):
-    pass
-
-
-class User(UserBase):
-    user_id: int
-    checkins: List["Checkin"] = []
-
-    class Config:
-        orm_mode = True
-
-
-# Checkin Schema
-class CheckinBase(BaseModel):
-    date: date
-
-
-class CheckinCreate(CheckinBase):
-    user_id: int
-
-
-class Checkin(CheckinBase):
+class Checkin(BaseModel):
     checkin_id: int
-    symptoms: List["Symptom"] = []
-    treatments: List["Treatment"] = []
-    tags: List["Tag"] = []
-    weather: Optional["Weather"] = None
-
-    class Config:
-        orm_mode = True
+    user_id: str
+    date: str
 
 
-# Symptom Schema
-class SymptomBase(BaseModel):
+class Symptom(BaseModel):
+    symptom_id: int
+    checkin_id: int
     symptom_name: str
     severity: int
 
 
-class SymptomCreate(SymptomBase):
+class Treatment(BaseModel):
+    treatment_id: int
     checkin_id: int
-
-
-class Symptom(SymptomBase):
-    symptom_id: int
-
-    class Config:
-        orm_mode = True
-
-
-# Treatment Schema
-class TreatmentBase(BaseModel):
     treatment_name: str
 
 
-class TreatmentCreate(TreatmentBase):
+class Tag(BaseModel):
+    tag_id: int
     checkin_id: int
-
-
-class Treatment(TreatmentBase):
-    treatment_id: int
-
-    class Config:
-        orm_mode = True
-
-
-# Tag Schema
-class TagBase(BaseModel):
     tag_name: str
 
 
-class TagCreate(TagBase):
-    checkin_id: int
-
-
-class Tag(TagBase):
-    tag_id: int
-
-    class Config:
-        orm_mode = True
-
-
-# Weather Schema
-class WeatherBase(BaseModel):
-    description: Optional[str]
-    temperature: Optional[float]
-    humidity: Optional[float]
-    pressure: Optional[float]
-
-
-class WeatherCreate(WeatherBase):
-    checkin_id: int
-
-
-class Weather(WeatherBase):
+class Weather(BaseModel):
     weather_id: int
+    checkin_id: int
+    description: str
+    temperature: float
+    humidity: float
+    pressure: float
 
-    class Config:
-        orm_mode = True
+
+class UserCreate(BaseModel):
+    age: int
+    sex: str
+    country: str
+
+
+class CheckinCreate(BaseModel):
+    user_id: int
+    date: str
+
+
+class SymptomCreate(BaseModel):
+    checkin_id: int
+    symptom_name: str
+    severity: int
+
+
+class TreatmentCreate(BaseModel):
+    checkin_id: int
+    treatment_name: str
+
+
+class TagCreate(BaseModel):
+    checkin_id: int
+    tag_name: str
+
+
+class WeatherCreate(BaseModel):
+    checkin_id: int
+    description: str
+    temperature: float
+    humidity: float
+    pressure: float
