@@ -1,97 +1,102 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from 'react';
+import { Line } from 'react-chartjs-2';
 
-const HomePage = () => {
-  const [users, setUsers] = useState([]);
-  const [checkins, setCheckins] = useState([]);
-  const [symptoms, setSymptoms] = useState([]);
-  const [treatments, setTreatments] = useState([]);
-  const [tags, setTags] = useState([]);
-  const [weather, setWeather] = useState([]);
+export default function Page() {
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // State for filters
+  const [startDate, setStartDate] = useState('2016-06-01');
+  const [endDate, setEndDate] = useState('2016-07-31');
+  const [ageGroup, setAgeGroup] = useState('25-34');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usersResponse, checkinsResponse, symptomsResponse, treatmentsResponse, tagsResponse, weatherResponse] = await Promise.all([
-          axios.get('http://localhost:8000/users'),
-          axios.get('http://localhost:8000/checkins'),
-          axios.get('http://localhost:8000/symptoms'),
-          axios.get('http://localhost:8000/treatments'),
-          axios.get('http://localhost:8000/tags'),
-          axios.get('http://localhost:8000/weather'),
-        ]);
-
-        setUsers(usersResponse.data);
-        setCheckins(checkinsResponse.data);
-        setSymptoms(symptomsResponse.data);
-        setTreatments(treatmentsResponse.data);
-        setTags(tagsResponse.data);
-        setWeather(weatherResponse.data);
+        const response = await fetch(`http://localhost:8000/average_symptom_severity/?startDate=${startDate}&endDate=${endDate}&ageGroup=${ageGroup}`);
+        const result = await response.json();
+        setData(result);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        setLoading(false);
+        console.error("Error fetching data: ", error);
       }
     };
 
     fetchData();
-  }, []);
+  }, [startDate, endDate, ageGroup]); // Adding dependencies to re-fetch data when filters change
 
-  if (loading) return <div>Loading...</div>;
+  const chartData = {
+    labels: data.map(entry => entry.date),
+    datasets: [
+      {
+        label: 'Average Symptom Severity',
+        data: data.map(entry => entry.average_severity),
+        fill: false,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+      },
+    ],
+  };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>User List</h1>
-      <Table data={users} headers={['ID', 'Age', 'Sex', 'Country']} rowKeys={['user_id', 'age', 'sex', 'country']} />
+    <div>
+      <h1>Average Symptom Severity Over Time</h1>
 
-      <h1>CheckIn List</h1>
-      <Table data={checkins} headers={['ID', 'User ID', 'Date']} rowKeys={['checkin_id', 'user_id', 'date']} />
+      {/* Filter control elements */}
+      <div>
+        <label>
+          Start Date:
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </label>
+        <label>
+          End Date:
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </label>
+        <label>
+          Age Group:
+          <select value={ageGroup} onChange={(e) => setAgeGroup(e.target.value)}>
+            <option value="18-24">18-24</option>
+            <option value="25-34">25-34</option>
+            <option value="35-44">35-44</option>
+            <option value="45-54">45-54</option>
+            <option value="55+">55+</option>
+          </select>
+        </label>
+        <button onClick={() => setLoading(true)}>Apply Filters</button> {/* Button to apply filters */}
+      </div>
 
-      <h1>Symptom List</h1>
-      <Table data={symptoms} headers={['ID', 'CheckIn ID', 'Name', 'Severity']} rowKeys={['symptom_id', 'checkin_id', 'symptom_name', 'severity']} />
-
-      <h1>Treatment List</h1>
-      <Table data={treatments} headers={['ID', 'CheckIn ID', 'Name']} rowKeys={['treatment_id', 'checkin_id', 'treatment_name']} />
-
-      <h1>Tag List</h1>
-      <Table data={tags} headers={['ID', 'CheckIn ID', 'Name']} rowKeys={['tag_id', 'checkin_id', 'tag_name']} />
-
-      <h1>Weather List</h1>
-      <Table data={weather} headers={['ID', 'CheckIn ID', 'Description', 'Temperature', 'Humidity', 'Pressure']} rowKeys={['weather_id', 'checkin_id', 'description', 'temperature', 'humidity', 'pressure']} />
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <Line data={chartData} options={{
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Average Severity',
+              },
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Date',
+              },
+            },
+          },
+        }} />
+      )}
     </div>
   );
-};
-
-// Table component for rendering tabular data
-const Table = ({ data, headers, rowKeys }) => (
-  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
-    <thead>
-      <tr>
-        {headers.map((header, index) => (
-          <th key={index} style={{ border: '1px solid #ddd', padding: '8px', background: '#f2f2f2', color: 'black' }}>{header}</th>
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      {data.length > 0 ? (
-        data.map((row, index) => (
-          <tr key={index} style={{ border: '1px solid #ddd' }}>
-            {rowKeys.map((key, i) => (
-              <td key={i} style={{ border: '1px solid #ddd', padding: '8px', color: 'black' }}>{row[key]}</td>
-            ))}
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan={headers.length} style={{ textAlign: 'center', padding: '8px', color: 'black' }}>No data available</td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-);
-
-export default HomePage;
+}
