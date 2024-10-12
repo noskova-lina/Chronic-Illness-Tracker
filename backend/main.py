@@ -1,22 +1,15 @@
 from fastapi import FastAPI, Depends, UploadFile, File
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import pandas as pd
-from database import SessionLocal, engine
-import models
-import schemas
+from backend.database import engine, get_db
+from backend import models, schemas
+from backend.routes import filters
 
 app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
-
-
-# Dependency to get a DB session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+app.include_router(filters.router)
 
 
 @app.post("/upload_csv")
@@ -69,7 +62,8 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
             if trackable_type in ['Condition', 'Symptom']:
                 # Check if the symptom already exists for this check-in
                 existing_symptom = db.query(models.Symptom).filter(models.Symptom.checkin_id == checkin.checkin_id,
-                                                                   models.Symptom.symptom_name == row['trackable_name']).first()
+                                                                   models.Symptom.symptom_name == row[
+                                                                       'trackable_name']).first()
 
                 if not existing_symptom:
                     symptom = models.Symptom(
@@ -225,3 +219,101 @@ def add_weather(weather: schemas.WeatherCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_weather)
     return db_weather
+
+
+@app.get("/average_symptom_severity/")
+def get_average_symptom_severity(db: Session = Depends(get_db)):
+    results = (
+        db.query(
+            models.CheckIn.date,
+            func.avg(models.Symptom.severity).label("average_severity")
+        )
+        .join(models.Symptom)
+        .group_by(models.CheckIn.date)
+        .order_by(models.CheckIn.date)
+        .all()
+    )
+
+    average_severity_data = [{"date": result.date.strftime("%Y-%m-%d"), "average_severity": result.average_severity} for
+                             result in results]
+
+    return average_severity_data
+
+
+@app.get("/treatment_frequency/")
+def get_treatment_frequency(db: Session = Depends(get_db)):
+    results = (
+        db.query(
+            models.Treatment.treatment_name,
+            func.count(models.Treatment.treatment_id).label("frequency")
+        )
+        .group_by(models.Treatment.treatment_name)
+        .order_by(func.count(models.Treatment.treatment_id).desc())
+        .all()
+    )
+
+    frequency_data = [{"treatment_name": result.treatment_name, "frequency": result.frequency} for result in results]
+
+    return frequency_data
+
+
+@app.get("/trigger_impact/")
+def get_trigger_impact(db: Session = Depends(get_db)):
+    results = (
+        db.query(
+            models.Tag.tag_name,
+            func.avg(models.Symptom.severity).label("average_severity")
+        )
+        .join(models.Tag, models.Tag.checkin_id == models.Symptom.checkin_id)
+        .group_by(models.Tag.tag_name)
+        .order_by(func.avg(models.Symptom.severity).desc())
+        .all()
+    )
+
+    impact_data = [{"trigger": result.tag_name, "average_severity": result.average_severity} for result in results]
+
+    return impact_data
+
+
+@app.get("/symptoms_by_period/")
+def get_symptoms_by_period(start_date: str, end_date: str, db: Session = Depends(get_db)):
+    results = (
+        db.query(
+            models.Symptom.symptom_name,
+            models.Symptom.severity,
+            models.CheckIn.date
+        )
+        .join(models.CheckIn)
+        .filter(models.CheckIn.date >= start_date, models.CheckIn.date <= end_date)
+        .all()
+    )
+
+    symptoms_data = [
+        {"symptom": result.symptom_name, "severity": result.severity, "date": result.date.strftime("%Y-%m-%d")} for
+        result in results]
+
+    return symptoms_data
+
+
+@app.get("/symptoms_by_age_group/")
+def get_symptoms_by_age_group(db: Session = Depends(get_db)):
+    results = (
+        db.query(
+            models.User.age,
+            models.Symptom.symptom_name,
+            func.avg(models.Symptom.severity).label("average_severity")
+        )
+        .select_from(models.CheckIn)
+        .join(models.User, models.CheckIn.user_id == models.User.user_id)
+        .join(models.Symptom, models.CheckIn.checkin_id == models.Symptom.checkin_id)
+        .group_by(models.User.age, models.Symptom.symptom_name)
+        .order_by(models.User.age)
+        .all()
+    )
+
+    symptoms_by_age = [
+        {"age": result.age, "symptom": result.symptom_name, "average_severity": result.average_severity}
+        for result in results
+    ]
+
+    return symptoms_by_age

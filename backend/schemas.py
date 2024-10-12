@@ -1,11 +1,12 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class User(BaseModel):
     user_id: str
-    age: int
-    sex: str
-    country: str
+    age: Optional[int] = None
+    sex: Optional[str] = None
+    country: Optional[str] = None
 
 
 class Checkin(BaseModel):
@@ -37,7 +38,7 @@ class Weather(BaseModel):
     weather_id: int
     checkin_id: int
     description: str
-    temperature: float
+    temperature: Optional[float] = None
     humidity: float
     pressure: float
 
