@@ -1,15 +1,22 @@
 from fastapi import FastAPI, Depends, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import pandas as pd
 from backend.database import engine, get_db
 from backend import models, schemas
-from backend.routes import filters
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 models.Base.metadata.create_all(bind=engine)
-app.include_router(filters.router)
 
 
 @app.post("/upload_csv")
@@ -275,26 +282,6 @@ def get_trigger_impact(db: Session = Depends(get_db)):
     return impact_data
 
 
-@app.get("/symptoms_by_period/")
-def get_symptoms_by_period(start_date: str, end_date: str, db: Session = Depends(get_db)):
-    results = (
-        db.query(
-            models.Symptom.symptom_name,
-            models.Symptom.severity,
-            models.CheckIn.date
-        )
-        .join(models.CheckIn)
-        .filter(models.CheckIn.date >= start_date, models.CheckIn.date <= end_date)
-        .all()
-    )
-
-    symptoms_data = [
-        {"symptom": result.symptom_name, "severity": result.severity, "date": result.date.strftime("%Y-%m-%d")} for
-        result in results]
-
-    return symptoms_data
-
-
 @app.get("/symptoms_by_age_group/")
 def get_symptoms_by_age_group(db: Session = Depends(get_db)):
     results = (
@@ -317,3 +304,50 @@ def get_symptoms_by_age_group(db: Session = Depends(get_db)):
     ]
 
     return symptoms_by_age
+
+
+@app.get("/symptoms_by_period/")
+def get_symptoms_by_period(start_date: str, end_date: str, db: Session = Depends(get_db)):
+    results = (
+        db.query(
+            models.Symptom.symptom_name,
+            models.Symptom.severity,
+            models.CheckIn.date
+        )
+        .join(models.CheckIn)
+        .filter(models.CheckIn.date >= start_date, models.CheckIn.date <= end_date)
+        .all()
+    )
+
+    symptoms_data = [
+        {"symptom": result.symptom_name, "severity": result.severity, "date": result.date.strftime("%Y-%m-%d")} for
+        result in results]
+
+    return symptoms_data
+
+
+@app.get("/filtered_symptoms/")
+def get_filtered_symptoms(start_date: str, end_date: str, db: Session = Depends(get_db)):
+    results = (
+        db.query(
+            models.Symptom.symptom_name,
+            func.avg(models.Symptom.severity).label("average_severity"),
+            models.CheckIn.date
+        )
+        .join(models.CheckIn)
+        .filter(models.CheckIn.date >= start_date, models.CheckIn.date <= end_date)
+        .group_by(models.Symptom.symptom_name, models.CheckIn.date)
+        .order_by(models.CheckIn.date)
+        .all()
+    )
+
+    filtered_data = [
+        {
+            "symptom": result.symptom_name,
+            "average_severity": result.average_severity,
+            "date": result.date.strftime("%Y-%m-%d")
+        }
+        for result in results
+    ]
+
+    return filtered_data
