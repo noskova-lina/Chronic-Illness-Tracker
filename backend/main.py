@@ -306,26 +306,6 @@ def get_symptoms_by_age_group(db: Session = Depends(get_db)):
     return symptoms_by_age
 
 
-@app.get("/symptoms_by_period/")
-def get_symptoms_by_period(start_date: str, end_date: str, db: Session = Depends(get_db)):
-    results = (
-        db.query(
-            models.Symptom.symptom_name,
-            models.Symptom.severity,
-            models.CheckIn.date
-        )
-        .join(models.CheckIn)
-        .filter(models.CheckIn.date >= start_date, models.CheckIn.date <= end_date)
-        .all()
-    )
-
-    symptoms_data = [
-        {"symptom": result.symptom_name, "severity": result.severity, "date": result.date.strftime("%Y-%m-%d")} for
-        result in results]
-
-    return symptoms_data
-
-
 @app.get("/filtered_symptoms/")
 def get_filtered_symptoms(start_date: str, end_date: str, db: Session = Depends(get_db)):
     results = (

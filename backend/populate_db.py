@@ -5,10 +5,8 @@ import models
 
 # Function to process and insert data
 def insert_data_from_csv(file_path: str):
-    # Read the CSV file
-    df = pd.read_csv(file_path, delimiter=',', low_memory=False)  # Avoids dtype warnings
+    df = pd.read_csv(file_path, delimiter=',', low_memory=False)
 
-    # Open a database session
     db = SessionLocal()
 
     try:
@@ -148,7 +146,6 @@ def insert_data_from_csv(file_path: str):
                     )
                     db.add(weather)
 
-                # Commit changes after processing weather data
                 db.commit()
 
         print("Data successfully inserted into the database.")
@@ -157,14 +154,10 @@ def insert_data_from_csv(file_path: str):
         print(f"Error occurred: {e}")
 
     finally:
-        # Close the database session
         db.close()
 
 
-# Main entry point
 if __name__ == "__main__":
-    # Path to the CSV file
     file_path = "data.csv"
 
-    # Call the function to insert data
     insert_data_from_csv(file_path)

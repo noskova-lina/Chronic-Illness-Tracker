@@ -1,16 +1,15 @@
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
-// Регистрация необходимых компонентов Chart.js
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const TreatmentFrequencyChart = ({ data }) => {
   const chartData = {
-    labels: data.map(item => item.treatment_name), // Используем treatment_name как метки
+    labels: data.map(item => item.treatment_name),
     datasets: [
       {
         label: 'Frequency',
-        data: data.map(item => item.frequency), // Используем frequency как данные
+        data: data.map(item => item.frequency),
         backgroundColor: 'rgba(75, 192, 192, 0.6)',
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 1,

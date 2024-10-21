@@ -1,4 +1,3 @@
-// app/average_symptom_severity/page.tsx
 import Link from 'next/link';
 
 export default function Home() {
@@ -15,6 +14,9 @@ export default function Home() {
           </li>
           <li>
             <Link href="/trigger_impact">Trigger Impact</Link>
+          </li>
+          <li>
+            <Link href="/symptom_filter">Symptom Filter</Link>
           </li>
         </ul>
       </nav>

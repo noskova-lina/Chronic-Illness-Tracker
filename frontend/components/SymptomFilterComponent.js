@@ -12,11 +12,9 @@ const SymptomFilterComponent = ({ onFilter }) => {
       return;
     }
 
-    // Convert dates to string format (YYYY-MM-DD)
     const start = startDate.toISOString().split('T')[0];
     const end = endDate.toISOString().split('T')[0];
 
-    // Invoke callback passed from parent component to handle API call
     onFilter(start, end);
   };
 
