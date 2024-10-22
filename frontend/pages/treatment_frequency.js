@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import TreatmentFrequencyChart from '../components/TreatmentFrequencyChart';
+import Link from 'next/link';
+import styles from '../styles/Charts.module.css';
 
 const TreatmentFrequency = () => {
   const [data, setData] = useState([]);
@@ -22,13 +24,20 @@ const TreatmentFrequency = () => {
     fetchData();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error fetching data: {error.message}</div>;
+  if (loading) return <div className={styles.loading}>Loading...</div>;
+  if (error) return <div className={styles.error}>Error fetching data: {error.message}</div>;
 
   return (
-    <div>
-      <h1>Treatment Frequency</h1>
-      <TreatmentFrequencyChart data={data} />
+    <div className={styles.container}>
+      <h1 className={styles.title}>Treatment Frequency</h1>
+      <div className={styles.content}>
+        <div className={styles.chartWrapper}>
+          <TreatmentFrequencyChart data={data} />
+        </div>
+      </div>
+      <nav className={styles.nav}>
+        <Link href="/" className={styles.navLink}>Home</Link>
+      </nav>
     </div>
   );
 };

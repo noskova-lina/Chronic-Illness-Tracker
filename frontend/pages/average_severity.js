@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import AverageSeverityChart from '../components/AverageSeverityChart';
+import Link from 'next/link';
+import styles from '../styles/Charts.module.css';
 
 const AverageSeverity = () => {
   const [data, setData] = useState([]);
@@ -22,13 +24,20 @@ const AverageSeverity = () => {
     fetchData();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error fetching data: {error.message}</div>;
+  if (loading) return <div className={styles.loading}>Loading...</div>;
+  if (error) return <div className={styles.error}>Error fetching data: {error.message}</div>;
 
   return (
-    <div>
-      <h1>Average Symptom Severity</h1>
-      <AverageSeverityChart data={data} />
+    <div className={styles.container}>
+      <h1 className={styles.title}>Average Symptom Severity</h1>
+      <div className={styles.content}>
+        <div className={styles.chartWrapper}>
+          <AverageSeverityChart data={data} />
+        </div>
+      </div>
+      <nav className={styles.nav}>
+        <Link href="/" className={styles.navLink}>Home</Link>
+      </nav>
     </div>
   );
 };

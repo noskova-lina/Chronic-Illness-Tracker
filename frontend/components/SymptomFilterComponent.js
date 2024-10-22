@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import styles from '../styles/SymptomFilter.module.css';
 
 const SymptomFilterComponent = ({ onFilter }) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const endDateRef = useRef(null);
 
   const handleFilterClick = () => {
     if (!startDate || !endDate) {
@@ -18,6 +20,12 @@ const SymptomFilterComponent = ({ onFilter }) => {
     onFilter(start, end);
   };
 
+  const handleKeyDown = (event, nextFieldRef) => {
+    if (event.key === 'Enter' && nextFieldRef.current) {
+      nextFieldRef.current.setFocus();
+    }
+  };
+
   return (
     <div>
       <h2>Filter Symptoms by Date Range</h2>
@@ -28,6 +36,7 @@ const SymptomFilterComponent = ({ onFilter }) => {
           selected={startDate}
           onChange={(date) => setStartDate(date)}
           dateFormat="yyyy-MM-dd"
+          onKeyDown={(event) => handleKeyDown(event, endDateRef)}
         />
       </div>
 
@@ -37,10 +46,16 @@ const SymptomFilterComponent = ({ onFilter }) => {
           selected={endDate}
           onChange={(date) => setEndDate(date)}
           dateFormat="yyyy-MM-dd"
+          ref={endDateRef}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              handleFilterClick();
+            }
+          }}
         />
       </div>
 
-      <button onClick={handleFilterClick}>Filter Symptoms</button>
+      <button onClick={handleFilterClick} className={styles.button}>Filter Symptoms</button>
     </div>
   );
 };

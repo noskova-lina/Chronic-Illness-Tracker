@@ -2,6 +2,8 @@ import { useState } from 'react';
 import SymptomFilterComponent from '../components/SymptomFilterComponent';
 import { Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
+import styles from '../styles/SymptomFilter.module.css';
+import Link from 'next/link';
 
 Chart.register(...registerables);
 
@@ -39,16 +41,17 @@ const SymptomFilter = () => {
   };
 
   return (
-    <div style={{ display: 'flex' }}>
-      <div style={{ flex: 1 }}>
-        <SymptomFilterComponent onFilter={handleFilter} />
+    <div className={styles.container}>
+      <h1 className={styles.title}>Symptom Filter</h1>
+      <SymptomFilterComponent onFilter={handleFilter} />
 
-        {loading && <p>Loading...</p>}
+      {loading && <div className={styles.loading}>Loading...</div>}
 
-        {filteredData.length > 0 && (
-          <div>
+      {filteredData.length > 0 && (
+        <div className={styles.content}>
+          <div className={styles.tableWrapper}>
             <h2>Filtered Symptoms</h2>
-            <table>
+            <table className={styles.table}>
               <thead>
                 <tr>
                   <th>Date</th>
@@ -67,17 +70,17 @@ const SymptomFilter = () => {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
 
-      <div style={{ flex: 1, paddingLeft: '20px' }}>
-        {filteredData.length > 0 && (
-          <div>
+          <div className={styles.chartWrapper}>
             <h2>Severity Chart</h2>
             <Bar data={chartData} options={{ responsive: true }} />
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      <nav className={styles.nav}>
+        <Link href="/" className={styles.navLink}>Home</Link>
+      </nav>
     </div>
   );
 };
