@@ -315,7 +315,7 @@ def get_filtered_symptoms(start_date: str, end_date: str, db: Session = Depends(
             models.CheckIn.date
         )
         .join(models.CheckIn)
-        .filter(models.CheckIn.date >= start_date, models.CheckIn.date <= end_date)
+        .filter(models.CheckIn.date > start_date, models.CheckIn.date <= end_date)
         .group_by(models.Symptom.symptom_name, models.CheckIn.date)
         .order_by(models.CheckIn.date)
         .all()
